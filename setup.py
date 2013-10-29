@@ -7,7 +7,7 @@ with open('README.txt') as readme:
 
 setup_args = dict(
     name='cherrypy-cors',
-    version='1.1',
+    use_hg_version=True,
     url='http://yougov.kilnhg.com/Code/Repositories/global/cherrypy-cors/',
     author='Yougov',
     long_description=long_description,
@@ -15,6 +15,9 @@ setup_args = dict(
     license='Apache License 2.0',
     py_modules=['cherrypy_cors'],
     description='CORS handling as a cherrypy tool.',
+    setup_requires=[
+        'hgtools',
+    ],
 )
 
 if __name__ == '__main__':
