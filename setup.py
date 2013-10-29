@@ -8,7 +8,7 @@ from setuptools.command.test import test
 setup_args = dict(
     name='cherrypy-cors',
     version='1.0',
-    url='http://www.yougov.com/',
+    url='http://yougov.kilnhg.com/Code/Repositories/global/cherrypy-cors/',
     author='Yougov',
     author_email='gustavo.picon@yougov.com',
     license='Apache License 2.0',
