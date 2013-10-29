@@ -4,12 +4,15 @@ import os
 from setuptools import setup
 from setuptools.command.test import test
 
+with open('README.txt') as readme:
+    long_description = readme.read()
 
 setup_args = dict(
     name='cherrypy-cors',
     version='1.0',
     url='http://yougov.kilnhg.com/Code/Repositories/global/cherrypy-cors/',
     author='Yougov',
+    long_description=long_description,
     author_email='gustavo.picon@yougov.com',
     license='Apache License 2.0',
     py_modules=['cherrypy_cors'],
