@@ -109,3 +109,9 @@ def preflight(allowed_methods, allowed_headers=None, allow_credentials=False,
 
 tools.expose = cherrypy.Tool('before_handler', expose)
 tools.preflight = cherrypy.Tool('before_handler', preflight)
+
+def install():
+    """
+    Install the toolbox such that it's available in all applications.
+    """
+    cherrypy._cptree.Application.toolboxes.update(cors=tools)
