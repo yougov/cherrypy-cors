@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-import os
 from setuptools import setup
-from setuptools.command.test import test
 
 with open('README.txt') as readme:
     long_description = readme.read()
