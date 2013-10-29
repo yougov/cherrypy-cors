@@ -7,7 +7,7 @@ with open('README.txt') as readme:
 
 setup_args = dict(
     name='cherrypy-cors',
-    version='1.0',
+    version='1.1',
     url='http://yougov.kilnhg.com/Code/Repositories/global/cherrypy-cors/',
     author='Yougov',
     long_description=long_description,
