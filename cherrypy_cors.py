@@ -1,9 +1,7 @@
 import cherrypy
 from cherrypy.lib import set_vary_header
+import httpagentparser
 
-# FIXME: written in a hurry for the cumulus sprint
-# TODO: docs and tests
-# TODO: extract into cherrypy-cors
 
 CORS_ALLOW_METHODS = 'Access-Control-Allow-Methods'
 CORS_ALLOW_ORIGIN = 'Access-Control-Allow-Origin'
@@ -13,11 +11,127 @@ CORS_REQUEST_METHOD = 'Access-Control-Request-Method'
 CORS_REQUEST_HEADERS = 'Access-Control-Request-Headers'
 CORS_MAX_AGE = 'Access-Control-Max-Age'
 CORS_ALLOW_HEADERS = 'Access-Control-Allow-Headers'
+PUBLIC_ORIGIN = '*'
 
-tools = cherrypy._cptools.Toolbox("cors")
+
+def expose(allow_credentials=False, expose_headers=None):
+    """Adds CORS support to the resource.
+
+    If the resource is allowed to be exposed, the value of the
+    `Access-Control-Allow-Origin`_ header in the response will echo
+    the `Origin`_ request header, and `Origin` will be
+    appended to the `Vary`_ response header.
+
+    :param allow_credentials: Use credentials to make cookies work
+                              (see `Access-Control-Allow-Credentials`_).
+    :type allow_credentials: bool
+    :param expose_headers: List of headers clients will be able to access
+                           (see `Access-Control-Expose-Headers`_).
+    :type expose_headers: list or NoneType
+
+    :returns: Whether the resource is being exposed.
+    :rtype: bool
+
+    - Configuration example:
+
+        .. code-block:: python
+
+            config = {
+                '/static': {
+                    'tools.staticdir.on': True,
+                    'cors.expose.on': True,
+                }
+            }
+    - Decorator example:
+
+        .. code-block:: python
+
+            @cherrypy_cors.tools.expose()
+            def DELETE(self):
+                self._delete()
+
+    """
+    if _get_cors().expose(allow_credentials, expose_headers):
+        _safe_caching_headers()
+        return True
+    return False
+
+
+def expose_public(expose_headers=None):
+    """Adds CORS support to the resource from any origin.
+
+    If the resource is allowed to be exposed, the value of the
+    `Access-Control-Allow-Origin`_ header in the response will be `*`.
+
+    :param expose_headers: List of headers clients will be able to access
+                           (see `Access-Control-Expose-Headers`_).
+    :type expose_headers: list or NoneType
+
+    :rtype: NoneType
+    """
+    _get_cors().expose_public(expose_headers)
+
+
+def preflight(allowed_methods, allowed_headers=None, allow_credentials=False,
+              max_age=None):
+    """Adds CORS `preflight`_ support to a `HTTP OPTIONS` request.
+
+    :param allowed_methods: List of supported `HTTP` methods
+                            (see `Access-Control-Allow-Methods`_).
+    :type allowed_methods: list or NoneType
+    :param allowed_headers: List of supported `HTTP` headers
+                            (see `Access-Control-Allow-Headers`_).
+    :type allowed_headers: list or NoneType
+    :param allow_credentials: Use credentials to make cookies work
+                              (see `Access-Control-Allow-Credentials`_).
+    :type allow_credentials: bool
+    :param max_age: Seconds to cache the preflight request
+                    (see `Access-Control-Max-Age`_).
+    :type max_age: int
+
+    :returns: Whether the preflight is allowed.
+    :rtype: bool
+
+    - Used as a decorator with the `Method Dispatcher`_
+
+        .. code-block:: python
+
+                @cherrypy_cors.tools.preflight(allowed_methods=["GET",
+                                                                "DELETE",
+                                                                "PUT"])
+                def OPTIONS(self):
+                    pass
+
+    - Function call with the `Object Dispatcher`_
+
+        .. code-block:: python
+
+                @cherrypy.expose
+                @cherrypy.tools.allow(methods=["GET", "DELETE", "PUT",
+                                               "OPTIONS"])
+                def thing(self):
+                    if cherrypy.request.method == "OPTIONS":
+                        cherrypy_cors.preflight(allowed_methods=["GET",
+                                                                 "DELETE",
+                                                                 "PUT"])
+                    else:
+                        self._do_other_things()
+
+    """
+    if _get_cors().preflight(allowed_methods, allowed_headers,
+                             allow_credentials, max_age):
+        _safe_caching_headers()
+        return True
+    return False
+
+
+def install():
+    """Install the toolbox such that it's available in all applications."""
+    cherrypy._cptree.Application.toolboxes.update(cors=tools)
 
 
 class CORS(object):
+    """A generic CORS handler."""
     def __init__(self, req_headers, resp_headers):
         self.req_headers = req_headers
         self.resp_headers = resp_headers
@@ -26,12 +140,20 @@ class CORS(object):
         if self._is_valid_origin():
             self._add_origin_and_credentials_headers(allow_credentials)
             self._add_expose_headers(expose_headers)
+            return True
+        return False
+
+    def expose_public(self, expose_headers):
+        self._add_public_origin()
+        self._add_expose_headers(expose_headers)
 
     def preflight(self, allowed_methods, allowed_headers, allow_credentials,
                   max_age):
         if self._is_valid_preflight_request(allowed_headers, allowed_methods):
             self._add_origin_and_credentials_headers(allow_credentials)
             self._add_prefligt_headers(allowed_methods, max_age)
+            return True
+        return False
 
     @property
     def origin(self):
@@ -46,6 +168,9 @@ class CORS(object):
         if allow_credentials:
             self.resp_headers[CORS_ALLOW_CREDENTIALS] = 'true'
 
+    def _add_public_origin(self):
+        self.resp_headers[CORS_ALLOW_ORIGIN] = PUBLIC_ORIGIN
+
     def _add_expose_headers(self, expose_headers):
         if expose_headers:
             self.resp_headers[CORS_EXPOSE_HEADERS] = expose_headers
@@ -58,22 +183,25 @@ class CORS(object):
     def requested_headers(self):
         return self.req_headers.get(CORS_REQUEST_HEADERS)
 
+    def _has_valid_method(self, allowed_methods):
+        return (
+            self.requested_method and
+            self.requested_method in allowed_methods
+        )
+
+    def _valid_headers(self, allowed_headers):
+        if self.requested_headers and allowed_headers:
+            for header in self.requested_headers.split(','):
+                if header.strip() not in allowed_headers:
+                    return False
+        return True
+
     def _is_valid_preflight_request(self, allowed_headers, allowed_methods):
-        valid = True
-        if not self._is_valid_origin():
-            valid = False
-        elif not self.requested_method:
-            valid = False
-        elif self.requested_method not in allowed_methods:
-            valid = False
-        elif self.requested_headers:
-            if allowed_headers:
-                for header in self.requested_headers.split(','):
-                    header = header.strip()
-                    if header not in allowed_headers:
-                        valid = False
-                        break
-        return valid
+        return (
+            self._is_valid_origin() and
+            self._has_valid_method(allowed_methods) and
+            self._valid_headers(allowed_headers)
+        )
 
     def _add_prefligt_headers(self, allowed_methods, max_age):
         rh = self.resp_headers
@@ -92,26 +220,17 @@ def _get_cors():
 
 
 def _safe_caching_headers():
-    set_vary_header(cherrypy.serving.response, "Origin")
+    """Adds `Origin`_ to the `Vary`_ header to ensure caching works properly.
+
+    Except in IE because it will disable caching completely. The caching
+    strategy in that case is out of the scope of this library.
+    """
+    ua = httpagentparser.detect(cherrypy.serving.request.headers['User-Agent'])
+    if ua['browser']['name'] != 'Microsoft Internet Explorer':
+        set_vary_header(cherrypy.serving.response, "Origin")
 
 
-def expose(allow_credentials=False, expose_headers=None):
-    _get_cors().expose(allow_credentials, expose_headers)
-    _safe_caching_headers()
-
-
-def preflight(allowed_methods, allowed_headers=None, allow_credentials=False,
-              max_age=None):
-    _get_cors().preflight(
-        allowed_methods, allowed_headers, allow_credentials, max_age)
-    _safe_caching_headers()
-
-
+tools = cherrypy._cptools.Toolbox("cors")
 tools.expose = cherrypy.Tool('before_handler', expose)
+tools.expose_public = cherrypy.Tool('before_handler', expose_public)
 tools.preflight = cherrypy.Tool('before_handler', preflight)
-
-def install():
-    """
-    Install the toolbox such that it's available in all applications.
-    """
-    cherrypy._cptree.Application.toolboxes.update(cors=tools)

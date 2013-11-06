@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-with open('README.txt') as readme:
+with open('README.rst') as readme:
     long_description = readme.read()
 
 setup_args = dict(
@@ -15,9 +15,13 @@ setup_args = dict(
     license='Apache License 2.0',
     py_modules=['cherrypy_cors'],
     description='CORS handling as a cherrypy tool.',
+    install_requires=[
+        'cherrypy>=3,<4',
+        'httpagentparser>=1.5'
+    ],
     setup_requires=[
         'hgtools',
-    ],
+    ]
 )
 
 if __name__ == '__main__':
