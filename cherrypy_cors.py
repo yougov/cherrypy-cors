@@ -226,7 +226,8 @@ def _safe_caching_headers():
     strategy in that case is out of the scope of this library.
     """
     ua = httpagentparser.detect(cherrypy.serving.request.headers['User-Agent'])
-    if ua['browser']['name'] != 'Microsoft Internet Explorer':
+    IE = 'Microsoft Internet Explorer'
+    if ua.get('browser', {}).get('name') != IE:
         set_vary_header(cherrypy.serving.response, "Origin")
 
 
