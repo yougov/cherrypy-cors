@@ -8,10 +8,10 @@ with open('README.rst') as readme:
 setup_args = dict(
     name='cherrypy-cors',
     use_hg_version=True,
-    url='http://yougov.kilnhg.com/Code/Repositories/global/cherrypy-cors/',
-    author='Yougov',
-    long_description=long_description,
+    url='https://bitbucket.org/yougov/cherrypy-cors/',
+    author='YouGov, Plc.',
     author_email='gustavo.picon@yougov.com',
+    long_description=long_description,
     license='Apache License 2.0',
     py_modules=['cherrypy_cors'],
     description='CORS handling as a cherrypy tool.',
