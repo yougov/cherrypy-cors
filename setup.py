@@ -7,7 +7,7 @@ with open('README.rst') as readme:
 
 setup_args = dict(
     name='cherrypy-cors',
-    use_hg_version=True,
+    use_scm_version=True,
     url='https://bitbucket.org/yougov/cherrypy-cors/',
     author='YouGov, Plc.',
     author_email='gustavo.picon@yougov.com',
@@ -20,7 +20,7 @@ setup_args = dict(
         'httpagentparser>=1.5'
     ],
     setup_requires=[
-        'hgtools',
+        'setuptools_scm',
     ]
 )
 
