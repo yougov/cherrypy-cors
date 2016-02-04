@@ -16,7 +16,7 @@ setup_args = dict(
     py_modules=['cherrypy_cors'],
     description='CORS handling as a cherrypy tool.',
     install_requires=[
-        'cherrypy>=3,<4',
+        'cherrypy>=3',
         'httpagentparser>=1.5'
     ],
     setup_requires=[
