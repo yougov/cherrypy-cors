@@ -1,3 +1,5 @@
+import re
+
 import cherrypy
 from cherrypy.test import helper
 
@@ -56,6 +58,9 @@ class CORSSimpleDecoratorTests(CORSRequests, helper.CPWebCase):
 
 
 class OriginRequests(object):
+    trusted_origin = 'example.com'
+    untrusted_origin = 'attacker.com'
+
     def test_bare_request(self):
         self.getPage('/')
         self.assertBody('hello')
@@ -63,15 +68,15 @@ class OriginRequests(object):
 
     def test_matching_origin_request(self):
         headers = list({
-            'Origin': 'example.com',
+            'Origin': self.trusted_origin,
         }.items())
         self.getPage('/', headers=headers)
         self.assertBody('hello')
-        self.assertHeader('Access-Control-Allow-Origin', 'example.com')
+        self.assertHeader('Access-Control-Allow-Origin', self.trusted_origin)
 
     def test_non_matching_origin_request(self):
         headers = list({
-            'Origin': 'attacker.com',
+            'Origin': self.untrusted_origin,
         }.items())
         self.getPage('/', headers=headers)
         self.assertBody('hello')
@@ -79,15 +84,15 @@ class OriginRequests(object):
 
     def test_preflight_request(self):
         headers = list({
-            'Origin': 'example.com',
+            'Origin': self.trusted_origin,
         }.items())
         self.getPage('/', method='OPTIONS', headers=headers)
         self.assertBody('hello')
-        self.assertHeader('Access-Control-Allow-Origin', 'example.com')
+        self.assertHeader('Access-Control-Allow-Origin', self.trusted_origin)
 
     def test_non_matching_preflight_request(self):
         headers = list({
-            'Origin': 'attacker.com',
+            'Origin': self.untrusted_origin,
         }.items())
         self.getPage('/', method='OPTIONS', headers=headers)
         self.assertBody('hello')
@@ -109,6 +114,30 @@ class CORSOriginServerTests(OriginRequests, helper.CPWebCase):
                 'cors.expose.on': True,
                 'cors.expose.origins': ['example.com'],
                 'cors.preflight.origins': ['example.com'],
+            },
+        }
+        cherrypy.tree.mount(Root(), config=config)
+
+        cherrypy_cors.install()
+
+
+class CORSOriginRegexTests(OriginRequests, helper.CPWebCase):
+    trusted_origin = 'svr5.example.com'
+    untrusted_origin = 'example.com'
+
+    @staticmethod
+    def setup_server():
+        class Root:
+
+            @cherrypy.expose
+            def index(self):
+                return "hello"
+
+        config = {
+            '/': {
+                'cors.expose.on': True,
+                'cors.expose.origins': [re.compile(r'svr[1-9]\.example\.com')],
+                'cors.preflight.origins': [re.compile(r'svr[1-9]\.example\.com')],
             },
         }
         cherrypy.tree.mount(Root(), config=config)

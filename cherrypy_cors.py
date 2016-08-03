@@ -1,3 +1,7 @@
+import re
+
+import six
+
 import cherrypy
 from cherrypy.lib import set_vary_header
 import httpagentparser
@@ -164,7 +168,17 @@ class CORS(object):
     def _is_valid_origin(self, origins):
         if origins is None:
             origins = [self.origin]
-        return self.origin is not None and self.origin in origins
+        origins = map(self._make_regex, origins)
+        return (
+            self.origin is not None
+            and any(origin.match(self.origin) for origin in origins)
+        )
+
+    @staticmethod
+    def _make_regex(pattern):
+        if isinstance(pattern, six.string_types):
+            pattern = re.compile(re.escape(pattern) + '$')
+        return pattern
 
     def _add_origin_and_credentials_headers(self, allow_credentials):
         self.resp_headers[CORS_ALLOW_ORIGIN] = self.origin
