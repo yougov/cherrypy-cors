@@ -96,9 +96,8 @@ def preflight(allowed_methods, allowed_headers=None, allow_credentials=False,
 
         .. code-block:: python
 
-                @cherrypy_cors.tools.preflight(allowed_methods=["GET",
-                                                                "DELETE",
-                                                                "PUT"])
+                @cherrypy_cors.tools.preflight(
+                    allowed_methods=["GET", "DELETE", "PUT"])
                 def OPTIONS(self):
                     pass
 
@@ -107,13 +106,12 @@ def preflight(allowed_methods, allowed_headers=None, allow_credentials=False,
         .. code-block:: python
 
                 @cherrypy.expose
-                @cherrypy.tools.allow(methods=["GET", "DELETE", "PUT",
-                                               "OPTIONS"])
+                @cherrypy.tools.allow(
+                    methods=["GET", "DELETE", "PUT", "OPTIONS"])
                 def thing(self):
                     if cherrypy.request.method == "OPTIONS":
-                        cherrypy_cors.preflight(allowed_methods=["GET",
-                                                                 "DELETE",
-                                                                 "PUT"])
+                        cherrypy_cors.preflight(
+                            allowed_methods=["GET", "DELETE", "PUT"])
                     else:
                         self._do_other_things()
 
