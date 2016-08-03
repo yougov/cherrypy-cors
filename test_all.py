@@ -19,7 +19,7 @@ class CORSRequests(object):
         self.assertHeader('Access-Control-Allow-Origin', 'example.com')
 
 
-class CORSServerTests(CORSRequests, helper.CPWebCase):
+class CORSSimpleServerTests(CORSRequests, helper.CPWebCase):
 
     @staticmethod
     def setup_server():
@@ -39,7 +39,7 @@ class CORSServerTests(CORSRequests, helper.CPWebCase):
         cherrypy_cors.install()
 
 
-class CORSDecoratorTests(CORSRequests, helper.CPWebCase):
+class CORSSimpleDecoratorTests(CORSRequests, helper.CPWebCase):
 
     @staticmethod
     def setup_server():
@@ -51,5 +51,66 @@ class CORSDecoratorTests(CORSRequests, helper.CPWebCase):
                 return "hello"
 
         cherrypy.tree.mount(Root())
+
+        cherrypy_cors.install()
+
+
+class OriginRequests(object):
+    def test_bare_request(self):
+        self.getPage('/')
+        self.assertBody('hello')
+        self.assertNoHeader('Access-Control-Allow-Origin')
+
+    def test_matching_origin_request(self):
+        headers = list({
+            'Origin': 'example.com',
+        }.items())
+        self.getPage('/', headers=headers)
+        self.assertBody('hello')
+        self.assertHeader('Access-Control-Allow-Origin', 'example.com')
+
+    def test_non_matching_origin_request(self):
+        headers = list({
+            'Origin': 'attacker.com',
+        }.items())
+        self.getPage('/', headers=headers)
+        self.assertBody('hello')
+        self.assertNoHeader('Access-Control-Allow-Origin')
+
+    def test_preflight_request(self):
+        headers = list({
+            'Origin': 'example.com',
+        }.items())
+        self.getPage('/', method='OPTIONS', headers=headers)
+        self.assertBody('hello')
+        self.assertHeader('Access-Control-Allow-Origin', 'example.com')
+
+    def test_non_matching_preflight_request(self):
+        headers = list({
+            'Origin': 'attacker.com',
+        }.items())
+        self.getPage('/', method='OPTIONS', headers=headers)
+        self.assertBody('hello')
+        self.assertNoHeader('Access-Control-Allow-Origin')
+
+
+class CORSOriginServerTests(OriginRequests, helper.CPWebCase):
+
+    @staticmethod
+    def setup_server():
+        class Root:
+
+            @cherrypy.expose
+            def index(self):
+                return "hello"
+
+        config = {
+            '/': {
+                'cors.expose.on': True,
+                'cors.expose.origins': ['example.com'],
+                'cors.preflight.origins': ['example.com'],
+            },
+        }
+        cherrypy.tree.mount(Root(), config=config)
 
         cherrypy_cors.install()
