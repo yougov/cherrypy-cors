@@ -3,14 +3,13 @@ cherrypy_cors
 
 CORS support for CherryPy
 
-.. image:: https://badge.fury.io/py/cherrypy_cors.svg
-    :target: https://badge.fury.io/py/cherrypy_cors
+.. image:: https://img.shields.io/pypi/v/cherrypy_cors.svg
+   :target: https://pypi.io/project/cherrypy_cors
 
-.. image:: https://pypip.in/d/cherrypy_cors/badge.png
-    :target: https://crate.io/packages/cherrypy_cors/
+.. image:: https://img.shields.io/pypi/dm/cherrypy_cors.svg
 
-.. image:: https://secure.travis-ci.org/yougov/cherrypy_cors.png
-    :target: http://travis-ci.org/yougov/cherrypy_cors
+.. image:: https://img.shields.io/travis/yougov/cherrypy_cors/master.svg
+   :target: http://travis-ci.org/yougov/cherrypy_cors
 
 In a nutshell
 =============
