@@ -223,7 +223,7 @@ def _safe_caching_headers():
     Except in IE because it will disable caching completely. The caching
     strategy in that case is out of the scope of this library.
     """
-    uah = cherrypy.serving.request.headers['User-Agent']
+    uah = cherrypy.serving.request.headers.get('User-Agent', '')
     ua = httpagentparser.detect(uah)
     IE = 'Microsoft Internet Explorer'
     if ua.get('browser', {}).get('name') != IE:
