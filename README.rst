@@ -8,8 +8,8 @@ CORS support for CherryPy
 
 .. image:: https://img.shields.io/pypi/dm/cherrypy_cors.svg
 
-.. image:: https://img.shields.io/travis/yougov/cherrypy_cors/master.svg
-   :target: http://travis-ci.org/yougov/cherrypy_cors
+.. image:: https://img.shields.io/travis/yougov/cherrypy-cors/master.svg
+   :target: http://travis-ci.org/yougov/cherrypy-cors
 
 In a nutshell
 =============
