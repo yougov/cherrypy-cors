@@ -6,6 +6,8 @@ CORS support for CherryPy
 .. image:: https://img.shields.io/pypi/v/cherrypy_cors.svg
    :target: https://pypi.io/project/cherrypy_cors
 
+.. image:: https://img.shields.io/pypi/pyversions/cherrypy_cors.svg
+
 .. image:: https://img.shields.io/pypi/dm/cherrypy_cors.svg
 
 .. image:: https://img.shields.io/travis/yougov/cherrypy-cors/master.svg
