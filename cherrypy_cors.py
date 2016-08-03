@@ -14,7 +14,7 @@ CORS_ALLOW_HEADERS = 'Access-Control-Allow-Headers'
 PUBLIC_ORIGIN = '*'
 
 
-def expose(allow_credentials=False, expose_headers=None):
+def expose(allow_credentials=False, expose_headers=None, origins=None):
     """Adds CORS support to the resource.
 
     If the resource is allowed to be exposed, the value of the
@@ -28,6 +28,8 @@ def expose(allow_credentials=False, expose_headers=None):
     :param expose_headers: List of headers clients will be able to access
                            (see `Access-Control-Expose-Headers`_).
     :type expose_headers: list or NoneType
+    :param origins: List of allowed origins clients must reference.
+    :type origins: list or NoneType
 
     :returns: Whether the resource is being exposed.
     :rtype: bool
@@ -51,7 +53,7 @@ def expose(allow_credentials=False, expose_headers=None):
                 self._delete()
 
     """
-    if _get_cors().expose(allow_credentials, expose_headers):
+    if _get_cors().expose(allow_credentials, expose_headers, origins):
         _safe_caching_headers()
         return True
     return False
@@ -73,7 +75,7 @@ def expose_public(expose_headers=None):
 
 
 def preflight(allowed_methods, allowed_headers=None, allow_credentials=False,
-              max_age=None):
+              max_age=None, origins=None):
     """Adds CORS `preflight`_ support to a `HTTP OPTIONS` request.
 
     :param allowed_methods: List of supported `HTTP` methods
@@ -88,6 +90,8 @@ def preflight(allowed_methods, allowed_headers=None, allow_credentials=False,
     :param max_age: Seconds to cache the preflight request
                     (see `Access-Control-Max-Age`_).
     :type max_age: int
+    :param origins: List of allowed origins clients must reference.
+    :type origins: list or NoneType
 
     :returns: Whether the preflight is allowed.
     :rtype: bool
@@ -117,7 +121,7 @@ def preflight(allowed_methods, allowed_headers=None, allow_credentials=False,
 
     """
     if _get_cors().preflight(allowed_methods, allowed_headers,
-                             allow_credentials, max_age):
+                             allow_credentials, max_age, origins):
         _safe_caching_headers()
         return True
     return False
@@ -134,8 +138,8 @@ class CORS(object):
         self.req_headers = req_headers
         self.resp_headers = resp_headers
 
-    def expose(self, allow_credentials, expose_headers):
-        if self._is_valid_origin():
+    def expose(self, allow_credentials, expose_headers, origins):
+        if self._is_valid_origin(origins):
             self._add_origin_and_credentials_headers(allow_credentials)
             self._add_expose_headers(expose_headers)
             return True
@@ -146,8 +150,8 @@ class CORS(object):
         self._add_expose_headers(expose_headers)
 
     def preflight(self, allowed_methods, allowed_headers, allow_credentials,
-                  max_age):
-        if self._is_valid_preflight_request(allowed_headers, allowed_methods):
+                  max_age, origins):
+        if self._is_valid_preflight_request(allowed_headers, allowed_methods, origins):
             self._add_origin_and_credentials_headers(allow_credentials)
             self._add_prefligt_headers(allowed_methods, max_age)
             return True
@@ -157,9 +161,10 @@ class CORS(object):
     def origin(self):
         return self.req_headers.get('Origin')
 
-    def _is_valid_origin(self):
-        # FIXME: handle whitelisting
-        return self.origin is not None
+    def _is_valid_origin(self, origins):
+        if origins is None:
+            origins = [self.origin]
+        return self.origin is not None and self.origin in origins
 
     def _add_origin_and_credentials_headers(self, allow_credentials):
         self.resp_headers[CORS_ALLOW_ORIGIN] = self.origin
@@ -194,9 +199,9 @@ class CORS(object):
                     return False
         return True
 
-    def _is_valid_preflight_request(self, allowed_headers, allowed_methods):
+    def _is_valid_preflight_request(self, allowed_headers, allowed_methods, origins):
         return (
-            self._is_valid_origin() and
+            self._is_valid_origin(origins) and
             self._has_valid_method(allowed_methods) and
             self._valid_headers(allowed_headers)
         )
