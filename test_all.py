@@ -20,6 +20,14 @@ class CORSRequests(object):
         self.assertBody('hello')
         self.assertHeader('Access-Control-Allow-Origin', 'example.com')
 
+    def test_CORS_request_with_scheme(self):
+        headers = list({
+            'Origin': 'https://example.com',
+        }.items())
+        self.getPage('/', headers=headers)
+        self.assertBody('hello')
+        self.assertHeader('Access-Control-Allow-Origin', 'example.com')
+
 
 class CORSSimpleServerTests(CORSRequests, helper.CPWebCase):
 
