@@ -14,14 +14,6 @@ class CORSRequests(object):
 
     def test_CORS_request(self):
         headers = list({
-            'Origin': 'example.com',
-        }.items())
-        self.getPage('/', headers=headers)
-        self.assertBody('hello')
-        self.assertHeader('Access-Control-Allow-Origin', 'example.com')
-
-    def test_CORS_request_with_scheme(self):
-        headers = list({
             'Origin': 'https://example.com',
         }.items())
         self.getPage('/', headers=headers)
@@ -66,8 +58,8 @@ class CORSSimpleDecoratorTests(CORSRequests, helper.CPWebCase):
 
 
 class OriginRequests(object):
-    trusted_origin = 'example.com'
-    untrusted_origin = 'attacker.com'
+    trusted_origin = 'https://example.com'
+    untrusted_origin = 'http://attacker.com'
 
     def test_bare_request(self):
         self.getPage('/')
@@ -117,11 +109,12 @@ class CORSOriginServerTests(OriginRequests, helper.CPWebCase):
             def index(self):
                 return "hello"
 
+        origins = 'http://example.com', 'https://example.com'
         config = {
             '/': {
                 'cors.expose.on': True,
-                'cors.expose.origins': ['example.com'],
-                'cors.preflight.origins': ['example.com'],
+                'cors.expose.origins': origins,
+                'cors.preflight.origins': origins,
             },
         }
         cherrypy.tree.mount(Root(), config=config)
@@ -130,8 +123,8 @@ class CORSOriginServerTests(OriginRequests, helper.CPWebCase):
 
 
 class CORSOriginRegexTests(OriginRequests, helper.CPWebCase):
-    trusted_origin = 'svr5.example.com'
-    untrusted_origin = 'example.com'
+    trusted_origin = 'https://svr5.example.com'
+    untrusted_origin = 'http://example.com'
 
     @staticmethod
     def setup_server():
@@ -141,11 +134,12 @@ class CORSOriginRegexTests(OriginRequests, helper.CPWebCase):
             def index(self):
                 return "hello"
 
+        pattern = re.compile(r'(http|https)://svr[1-9]\.example\.com')
         config = {
             '/': {
                 'cors.expose.on': True,
-                'cors.expose.origins': [re.compile(r'svr[1-9]\.example\.com')],
-                'cors.preflight.origins': [re.compile(r'svr[1-9]\.example\.com')],
+                'cors.expose.origins': [pattern],
+                'cors.preflight.origins': [pattern],
             },
         }
         cherrypy.tree.mount(Root(), config=config)
