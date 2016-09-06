@@ -26,7 +26,7 @@ class CORSRequests(object):
         }.items())
         self.getPage('/', headers=headers)
         self.assertBody('hello')
-        self.assertHeader('Access-Control-Allow-Origin', 'example.com')
+        self.assertHeader('Access-Control-Allow-Origin', 'https://example.com')
 
 
 class CORSSimpleServerTests(CORSRequests, helper.CPWebCase):
