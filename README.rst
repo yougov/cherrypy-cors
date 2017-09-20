@@ -44,5 +44,5 @@ static resources.
     }
 
 See `simple-example
-<https://github.com/yougov/cherrypy_cors/blob/master/simple-example.py>`_
+<https://github.com/yougov/cherrypy-cors/blob/master/simple-example.py>`_
 for a runnable example.
