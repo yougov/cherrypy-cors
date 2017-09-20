@@ -1,8 +1,3 @@
-cherrypy_cors
-=============
-
-CORS support for CherryPy
-
 .. image:: https://img.shields.io/pypi/v/cherrypy_cors.svg
    :target: https://pypi.io/project/cherrypy_cors
 
@@ -12,6 +7,15 @@ CORS support for CherryPy
 
 .. image:: https://img.shields.io/travis/yougov/cherrypy-cors/master.svg
    :target: http://travis-ci.org/yougov/cherrypy-cors
+
+CORS support for CherryPy
+
+License
+=======
+
+License is indicated in the project metadata (typically one or more
+of the Trove classifiers). For more details, see `this explanation
+<https://github.com/jaraco/skeleton/issues/1>`_.
 
 In a nutshell
 =============
