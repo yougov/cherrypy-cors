@@ -1,3 +1,8 @@
+1.6
+---
+
+Re-release with updated project metadata.
+
 1.5
 ---
 
